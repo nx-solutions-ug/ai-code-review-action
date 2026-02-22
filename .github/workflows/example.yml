@@ -9,47 +9,47 @@ on:
 
 # Required permissions for the action
 permissions:
-  contents: read          # To read repository content
-  pull-requests: write    # To post review comments
+  contents: read # To read repository content
+  pull-requests: write # To post review comments
 
 jobs:
   ai-review:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, self-hosted]
     name: AI Code Review
-    
+
     steps:
       # Checkout the repository
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for better context
+          fetch-depth: 0 # Full history for better context
 
       # Run AI Code Review
       - name: AI Code Review
         uses: your-username/ai-code-review-action@v1
         with:
           # Required: LLM configuration
-          LLM_BASE_URL: 'https://api.openai.com/v1'
-          LLM_MODEL: 'gpt-4o'
+          LLM_BASE_URL: "https://api.openai.com/v1"
+          LLM_MODEL: "gpt-4o"
           LLM_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          
+
           # Required: GitHub token (automatically provided)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # Optional: Review mode (summary, detailed, security, performance)
-          REVIEW_MODE: 'detailed'
-          
+          REVIEW_MODE: "detailed"
+
           # Optional: Maximum files to review (0 for unlimited)
-          MAX_FILES: '50'
-          
+          MAX_FILES: "50"
+
           # Optional: File patterns to exclude
-          EXCLUDE_PATTERNS: '*.lock,*.min.js,*.min.css,dist/**,build/**,node_modules/**,coverage/**'
-          
+          EXCLUDE_PATTERNS: "*.lock,*.min.js,*.min.css,dist/**,build/**,node_modules/**,coverage/**"
+
           # Optional: Fail workflow if review fails
-          FAIL_ON_ERROR: 'false'
-          
+          FAIL_ON_ERROR: "false"
+
           # Optional: Post as formal PR review
-          POST_AS_REVIEW: 'true'
+          POST_AS_REVIEW: "true"
 
       # Optional: Use the outputs
       - name: Review Results
