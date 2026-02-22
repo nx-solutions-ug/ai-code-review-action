@@ -1,0 +1,74 @@
+name: 'AI Code Review'
+description: 'Automated code review using LLM for pull requests with inline comments like GitHub Copilot'
+author: 'Your Name'
+
+branding:
+  icon: 'code'
+  color: 'blue'
+
+inputs:
+  LLM_BASE_URL:
+    description: 'Base URL for the LLM API (OpenAI-compatible endpoint)'
+    required: true
+    default: 'https://api.openai.com/v1'
+  
+  LLM_MODEL:
+    description: 'Model to use for code review (e.g., gpt-4, gpt-4o, claude-3-sonnet)'
+    required: true
+    default: 'gpt-4o'
+  
+  LLM_API_KEY:
+    description: 'API key for the LLM service'
+    required: true
+  
+  PROMPT:
+    description: 'Custom prompt template for the LLM review'
+    required: false
+    default: ''
+  
+  GITHUB_TOKEN:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+  
+  REVIEW_MODE:
+    description: 'Review mode: summary, detailed, security, or performance'
+    required: false
+    default: 'detailed'
+  
+  MAX_FILES:
+    description: 'Maximum number of files to review (0 for unlimited)'
+    required: false
+    default: '50'
+  
+  EXCLUDE_PATTERNS:
+    description: 'Comma-separated file patterns to exclude (e.g., *.md,*.json,dist/**)'
+    required: false
+    default: '*.lock,*.min.js,*.min.css,dist/**,build/**,node_modules/**,coverage/**'
+  
+  FAIL_ON_ERROR:
+    description: 'Fail the workflow if the review encounters an error'
+    required: false
+    default: 'false'
+  
+  POST_AS_REVIEW:
+    description: 'Post review as a formal PR review (true) or as comments (false)'
+    required: false
+    default: 'true'
+
+outputs:
+  review-summary:
+    description: 'Summary of the code review findings'
+  
+  files-reviewed:
+    description: 'Number of files reviewed'
+  
+  comments-posted:
+    description: 'Number of review comments posted'
+  
+  status:
+    description: 'Review status: success, partial, or failed'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

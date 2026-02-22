@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-major-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Update major version tag
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          git tag -fa $MAJOR -m "Update $MAJOR tag"
+          git push origin $MAJOR --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
