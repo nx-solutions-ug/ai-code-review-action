@@ -35728,6 +35728,20 @@ CRITICAL RULES for suggestions:
 - Example BAD suggestion: "Pin to a specific commit SHA..." (this is just text, not code)
 - Example BAD suggestion: Removing the 'steps:' line - this is valid YAML structure
 
+DO NOT comment on:
+- Line ordering (e.g., suggesting to move timeout-minutes before runs-on)
+- Indentation style preferences
+- Formatting that doesn't affect functionality
+- Trivial style choices that are subjective
+- Valid alternative syntax (e.g., array vs scalar in YAML)
+
+ONLY comment on actual issues:
+- Security vulnerabilities
+- Bugs or logic errors
+- Performance problems
+- Missing error handling
+- Actual best practice violations (not style preferences)
+
 Rules:
 - Only comment on changed lines (the diff)
 - Be specific and actionable
