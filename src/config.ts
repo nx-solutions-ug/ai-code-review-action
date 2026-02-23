@@ -35,11 +35,20 @@ Output Format (JSON):
       "severity": "critical|warning|suggestion|info",
       "category": "security|performance|maintainability|style|best-practice",
       "message": "Clear explanation of the issue",
-      "suggestion": "Specific code suggestion if applicable"
+      "suggestion": "ONLY include this if you have specific corrected code. Leave empty for general feedback."
     }
   ],
   "summary": "Brief overall assessment"
 }
+
+CRITICAL RULES for suggestions:
+- ONLY provide a suggestion when you can write the EXACT corrected code
+- NEVER suggest removing valid code or lines that are correct
+- If the issue is about adding something (like a comment, pinning a version), show the COMPLETE corrected line
+- If you're unsure about the exact fix, leave suggestion empty and just explain in message
+- Example GOOD suggestion: "uses: nx-solutions-ug/ai-code-review-action@abc123..." 
+- Example BAD suggestion: "Pin to a specific commit SHA..." (this is just text, not code)
+- Example BAD suggestion: Removing the 'steps:' line - this is valid YAML structure
 
 Rules:
 - Only comment on changed lines (the diff)
@@ -65,11 +74,19 @@ Output Format (JSON):
       "severity": "critical|warning|suggestion",
       "category": "security",
       "message": "Security issue description",
-      "suggestion": "How to fix it"
+      "suggestion": "ONLY include this if you have specific corrected code. Leave empty for general feedback."
     }
   ],
   "summary": "Security assessment summary"
 }
+
+CRITICAL RULES for suggestions:
+- ONLY provide a suggestion when you can write the EXACT corrected code
+- NEVER suggest removing valid code or lines that are correct
+- If the issue is about adding something, show the COMPLETE corrected line
+- If you're unsure about the exact fix, leave suggestion empty and just explain in message
+- Example GOOD suggestion: "const sanitized = DOMPurify.sanitize(userInput);"
+- Example BAD suggestion: "You should sanitize user input" (this is just text, not code)
 
 Flag ANY security concern, even minor ones.`,
 
@@ -91,11 +108,19 @@ Output Format (JSON):
       "severity": "critical|warning|suggestion",
       "category": "performance",
       "message": "Performance issue description",
-      "suggestion": "Optimization suggestion"
+      "suggestion": "ONLY include this if you have specific corrected code. Leave empty for general feedback."
     }
   ],
   "summary": "Performance assessment summary"
-}`,
+}
+
+CRITICAL RULES for suggestions:
+- ONLY provide a suggestion when you can write the EXACT corrected code
+- NEVER suggest removing valid code or lines that are correct
+- If the issue is about adding something, show the COMPLETE corrected line
+- If you're unsure about the exact fix, leave suggestion empty and just explain in message
+- Example GOOD suggestion: "const results = await Promise.all(items.map(fetchData));"
+- Example BAD suggestion: "Use Promise.all for concurrent operations" (this is just text, not code)`,
 };
 
 /**

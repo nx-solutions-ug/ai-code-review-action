@@ -1,7 +1,13 @@
-import { Config, PullRequestFile, ReviewComment, ReviewIssue, ReviewSummary } from '../types';
-import { GitHubClient } from '../github/client';
-import { LLMClient } from '../llm/client';
-import { logger } from '../utils/logger';
+import {
+  Config,
+  PullRequestFile,
+  ReviewComment,
+  ReviewIssue,
+  ReviewSummary,
+} from "../types";
+import { GitHubClient } from "../github/client";
+import { LLMClient } from "../llm/client";
+import { logger } from "../utils/logger";
 
 export class ReviewOrchestrator {
   private config: Config;
@@ -19,18 +25,20 @@ export class ReviewOrchestrator {
    */
   async runReview(): Promise<ReviewSummary> {
     const startTime = Date.now();
-    
-    logger.info('Starting AI code review...');
+
+    logger.info("Starting AI code review...");
 
     // Get PR details
     const prDetails = await this.github.getPRDetails();
     logger.info(`Reviewing PR: ${prDetails.title}`);
 
     // Get changed files
-    const files = await this.github.getChangedFiles(this.config.excludePatterns);
-    
+    const files = await this.github.getChangedFiles(
+      this.config.excludePatterns,
+    );
+
     if (files.length === 0) {
-      logger.info('No files to review');
+      logger.info("No files to review");
       return {
         totalFiles: 0,
         filesReviewed: 0,
@@ -38,17 +46,18 @@ export class ReviewOrchestrator {
         criticalIssues: 0,
         warnings: 0,
         suggestions: 0,
-        summary: 'No files to review',
+        summary: "No files to review",
       };
     }
 
     // Limit files if configured
-    const filesToReview = this.config.maxFiles > 0 
-      ? files.slice(0, this.config.maxFiles) 
-      : files;
+    const filesToReview =
+      this.config.maxFiles > 0 ? files.slice(0, this.config.maxFiles) : files;
 
     if (filesToReview.length < files.length) {
-      logger.warning(`Limited to ${filesToReview.length} files (skipped ${files.length - filesToReview.length})`);
+      logger.warning(
+        `Limited to ${filesToReview.length} files (skipped ${files.length - filesToReview.length})`,
+      );
     }
 
     // Review each file
@@ -64,7 +73,7 @@ export class ReviewOrchestrator {
 
     for (const file of filesToReview) {
       // Skip removed files
-      if (file.status === 'removed' || !file.patch) {
+      if (file.status === "removed" || !file.patch) {
         logger.info(`Skipping ${file.filename} (removed or no patch)`);
         continue;
       }
@@ -73,7 +82,7 @@ export class ReviewOrchestrator {
         const result = await this.reviewFile(
           file,
           prDetails.title,
-          prDetails.body || undefined
+          prDetails.body || undefined,
         );
 
         allComments.push(...result.comments);
@@ -93,19 +102,25 @@ export class ReviewOrchestrator {
 
     // Generate overall summary
     const overallSummary = await this.llm.generateSummary(
-      fileResults.map(r => ({
+      fileResults.map((r) => ({
         filePath: r.filePath,
         summary: r.summary,
         issueCount: r.issueCount,
       })),
-      this.config.prompt
+      this.config.prompt,
     );
 
     // Calculate statistics
     const totalComments = allComments.length;
-    const criticalIssues = fileResults.reduce((sum, r) => sum + r.criticalCount, 0);
+    const criticalIssues = fileResults.reduce(
+      (sum, r) => sum + r.criticalCount,
+      0,
+    );
     const warnings = fileResults.reduce((sum, r) => sum + r.warningCount, 0);
-    const suggestions = fileResults.reduce((sum, r) => sum + r.suggestionCount, 0);
+    const suggestions = fileResults.reduce(
+      (sum, r) => sum + r.suggestionCount,
+      0,
+    );
 
     // Post review
     if (totalComments > 0) {
@@ -114,11 +129,11 @@ export class ReviewOrchestrator {
         fileResults,
         criticalIssues,
         warnings,
-        suggestions
+        suggestions,
       );
 
       if (this.config.postAsReview) {
-        await this.github.createReview(allComments, reviewBody, 'COMMENT');
+        await this.github.createReview(allComments, reviewBody, "COMMENT");
       } else {
         await this.github.postReviewComments(allComments);
         await this.github.postGeneralComment(reviewBody);
@@ -132,7 +147,7 @@ ${overallSummary}
 **No issues found!** Great job! 🎉`;
 
       if (this.config.postAsReview) {
-        await this.github.createReview([], approvalBody, 'APPROVE');
+        await this.github.createReview([], approvalBody, "APPROVE");
       } else {
         await this.github.postGeneralComment(approvalBody);
       }
@@ -142,7 +157,9 @@ ${overallSummary}
     logger.info(`Review completed in ${duration}s`);
     logger.info(`  Files reviewed: ${fileResults.length}`);
     logger.info(`  Total comments: ${totalComments}`);
-    logger.info(`  Critical: ${criticalIssues}, Warnings: ${warnings}, Suggestions: ${suggestions}`);
+    logger.info(
+      `  Critical: ${criticalIssues}, Warnings: ${warnings}, Suggestions: ${suggestions}`,
+    );
 
     return {
       totalFiles: files.length,
@@ -161,7 +178,7 @@ ${overallSummary}
   private async reviewFile(
     file: PullRequestFile,
     prTitle?: string,
-    prDescription?: string
+    prDescription?: string,
   ): Promise<{
     comments: ReviewComment[];
     summary: string;
@@ -172,20 +189,28 @@ ${overallSummary}
     return logger.group(`Reviewing ${file.filename}`, async () => {
       const result = await this.llm.reviewCode(
         file.filename,
-        file.patch || '',
+        file.patch || "",
         this.config.prompt,
         prTitle,
-        prDescription
+        prDescription,
       );
 
       // Convert review issues to GitHub comments
-      const comments = this.createReviewComments(file.filename, result.reviews, file.patch || '');
+      const comments = this.createReviewComments(
+        file.filename,
+        result.reviews,
+        file.patch || "",
+      );
 
       // Count by severity
-      const criticalCount = result.reviews.filter(r => r.severity === 'critical').length;
-      const warningCount = result.reviews.filter(r => r.severity === 'warning').length;
+      const criticalCount = result.reviews.filter(
+        (r) => r.severity === "critical",
+      ).length;
+      const warningCount = result.reviews.filter(
+        (r) => r.severity === "warning",
+      ).length;
       const suggestionCount = result.reviews.filter(
-        r => r.severity === 'suggestion' || r.severity === 'info'
+        (r) => r.severity === "suggestion" || r.severity === "info",
       ).length;
 
       logger.info(`  Found ${comments.length} comment(s)`);
@@ -206,37 +231,43 @@ ${overallSummary}
   private createReviewComments(
     filePath: string,
     issues: ReviewIssue[],
-    patch: string
+    patch: string,
   ): ReviewComment[] {
     const comments: ReviewComment[] = [];
-    const patchLines = patch.split('\n');
+    const patchLines = patch.split("\n");
 
     for (const issue of issues) {
       // Map the issue line to the actual diff line
       const lineNumber = this.mapLineToDiff(issue.line, patchLines);
 
       if (!lineNumber) {
-        logger.debug(`Could not map line ${issue.line} to diff for ${filePath}`);
+        logger.debug(
+          `Could not map line ${issue.line} to diff for ${filePath}`,
+        );
         continue;
       }
 
       const severityEmoji = this.getSeverityEmoji(issue.severity);
-      const categoryLabel = issue.category ? `**${issue.category.toUpperCase()}**` : '';
+      const categoryLabel = issue.category
+        ? `**${issue.category.toUpperCase()}**`
+        : "";
 
       const body = [
         `${severityEmoji} ${categoryLabel}`,
-        '',
+        "",
         issue.message,
-        issue.suggestion ? `\n**Suggestion:**\n\`\`\`suggestion\n${issue.suggestion}\n\`\`\`` : '',
+        issue.suggestion
+          ? `\n**Suggestion:**\n\`\`\`suggestion\n${issue.suggestion}\n\`\`\``
+          : "",
       ]
         .filter(Boolean)
-        .join('\n');
+        .join("\n");
 
       comments.push({
         path: filePath,
         line: lineNumber,
         body,
-        side: 'RIGHT',
+        side: "RIGHT",
       });
     }
 
@@ -246,7 +277,10 @@ ${overallSummary}
   /**
    * Map a source file line number to the diff line number
    */
-  private mapLineToDiff(targetLine: number, patchLines: string[]): number | null {
+  private mapLineToDiff(
+    targetLine: number,
+    patchLines: string[],
+  ): number | null {
     let currentLine = 0;
     let inHunk = false;
 
@@ -263,13 +297,13 @@ ${overallSummary}
 
       if (!inHunk) continue;
 
-      if (line.startsWith('+')) {
+      if (line.startsWith("+")) {
         currentLine++;
         if (currentLine === targetLine) {
           // Return the line number in the patch (1-indexed for GitHub API)
           return i + 1;
         }
-      } else if (!line.startsWith('-')) {
+      } else if (!line.startsWith("-")) {
         currentLine++;
       }
     }
@@ -282,16 +316,16 @@ ${overallSummary}
    */
   private getSeverityEmoji(severity: string): string {
     switch (severity) {
-      case 'critical':
-        return '🔴';
-      case 'warning':
-        return '🟡';
-      case 'suggestion':
-        return '💡';
-      case 'info':
-        return 'ℹ️';
+      case "critical":
+        return "🔴";
+      case "warning":
+        return "🟡";
+      case "suggestion":
+        return "💡";
+      case "info":
+        return "ℹ️";
       default:
-        return '📝';
+        return "📝";
     }
   }
 
@@ -307,23 +341,23 @@ ${overallSummary}
     }>,
     criticalIssues: number,
     warnings: number,
-    suggestions: number
+    suggestions: number,
   ): string {
     const stats = [
-      criticalIssues > 0 ? `🔴 ${criticalIssues} critical` : '',
-      warnings > 0 ? `🟡 ${warnings} warnings` : '',
-      suggestions > 0 ? `💡 ${suggestions} suggestions` : '',
+      criticalIssues > 0 ? `🔴 ${criticalIssues} critical` : "",
+      warnings > 0 ? `🟡 ${warnings} warnings` : "",
+      suggestions > 0 ? `💡 ${suggestions} suggestions` : "",
     ].filter(Boolean);
 
-    return `## 🤖 AI Code Review
+    return `## 🤖 Open Review
 
 ${summary}
 
 ### Summary
-${stats.length > 0 ? stats.join(' | ') : '✅ No issues found'}
+${stats.length > 0 ? stats.join(" | ") : "✅ No issues found"}
 
 ### Files Reviewed
-${fileResults.map(r => `- ${r.filePath}${r.issueCount > 0 ? ` (${r.issueCount} comment${r.issueCount > 1 ? 's' : ''})` : ''}`).join('\n')}
+${fileResults.map((r) => `- ${r.filePath}${r.issueCount > 0 ? ` (${r.issueCount} comment${r.issueCount > 1 ? "s" : ""})` : ""}`).join("\n")}
 
 ---
 *This review was generated by AI. Please review the suggestions carefully before applying them.*`;
