@@ -36604,13 +36604,23 @@ ${overallSummary}
             const categoryLabel = issue.category
                 ? `**${issue.category.toUpperCase()}**`
                 : "";
-            // Note: We don't render suggestions because LLMs are unreliable at generating
-            // correct line-specific suggestions. They often identify wrong lines or suggest
-            // changes that don't match the target line, which can break the code.
+            // Get the original line content for validation
+            const originalLine = this.getOriginalLineContent(lineNumber, patchLines);
+            // Validate suggestion - it should be an actual improvement
+            const isValidSuggestion = issue.suggestion &&
+                this.isValidSuggestion(issue.suggestion, originalLine);
+            if (issue.suggestion && !isValidSuggestion) {
+                logger_1.logger.debug(`Filtering out invalid suggestion for ${filePath}:${issue.line}`);
+                logger_1.logger.debug(`  Original: ${originalLine}`);
+                logger_1.logger.debug(`  Suggestion: ${issue.suggestion}`);
+            }
             const body = [
                 `${severityEmoji} ${categoryLabel}`,
                 "",
                 issue.message,
+                isValidSuggestion
+                    ? `\n**Suggestion:**\n\`\`\`suggestion\n${issue.suggestion}\n\`\`\``
+                    : "",
             ]
                 .filter(Boolean)
                 .join("\n");
@@ -36669,6 +36679,71 @@ ${overallSummary}
             default:
                 return "📝";
         }
+    }
+    /**
+     * Get the original line content from the patch at the given line number
+     */
+    getOriginalLineContent(lineNumber, patchLines) {
+        // lineNumber is 1-indexed in the patch
+        if (lineNumber < 1 || lineNumber > patchLines.length) {
+            return null;
+        }
+        const line = patchLines[lineNumber - 1];
+        // For added lines, return the content without the '+' prefix
+        if (line.startsWith("+")) {
+            return line.substring(1);
+        }
+        // For context lines, return as-is
+        if (!line.startsWith("-") && !line.startsWith("@")) {
+            return line;
+        }
+        return null;
+    }
+    /**
+     * Validate that a suggestion is a proper replacement for the original line
+     */
+    isValidSuggestion(suggestion, originalLine) {
+        if (!suggestion || suggestion.trim().length === 0) {
+            return false;
+        }
+        // Must be single line
+        if (suggestion.includes('\n') || suggestion.includes('\r')) {
+            return false;
+        }
+        // If we can't determine the original line, be conservative
+        if (!originalLine) {
+            return false;
+        }
+        const trimmedSuggestion = suggestion.trim();
+        const trimmedOriginal = originalLine.trim();
+        // Suggestion must be different from original
+        if (trimmedSuggestion === trimmedOriginal) {
+            return false;
+        }
+        // Check for advice words that indicate it's not actual code
+        const adviceIndicators = [
+            'consider', 'should', 'could', 'would', 'might',
+            'ensure', 'verify', 'check', 'pin to', 'e.g.,',
+            'for example', 'you can', 'it is', 'this is',
+        ];
+        const lowerSuggestion = trimmedSuggestion.toLowerCase();
+        for (const indicator of adviceIndicators) {
+            if (lowerSuggestion.includes(indicator)) {
+                return false;
+            }
+        }
+        // Suggestion should share some structure with original (e.g., same key in YAML)
+        // This prevents suggesting "runs-on:" when original is "timeout-minutes:"
+        const originalKey = trimmedOriginal.split(':')[0].trim();
+        const suggestionKey = trimmedSuggestion.split(':')[0].trim();
+        // If both have colons (likely YAML), the keys should match
+        if (trimmedOriginal.includes(':') && trimmedSuggestion.includes(':')) {
+            if (originalKey !== suggestionKey) {
+                logger_1.logger.debug(`Key mismatch: original="${originalKey}", suggestion="${suggestionKey}"`);
+                return false;
+            }
+        }
+        return true;
     }
     /**
      * Format the review body with summary and statistics
