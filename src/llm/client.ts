@@ -52,7 +52,6 @@ export class LLMClient {
             ],
             temperature: 0.1,
             max_tokens: 4000,
-            response_format: { type: 'json_object' },
           }),
         {
           maxAttempts: 3,
@@ -61,6 +60,10 @@ export class LLMClient {
       );
 
       const content = response.choices[0]?.message?.content;
+      
+      // Log raw response for debugging
+      logger.debug(`Raw LLM response for ${filePath}:`);
+      logger.debug(content || '(empty response)');
       
       if (!content) {
         logger.warning(`Empty response from LLM for ${filePath}`);

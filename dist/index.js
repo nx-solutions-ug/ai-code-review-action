@@ -36252,12 +36252,14 @@ class LLMClient {
                 ],
                 temperature: 0.1,
                 max_tokens: 4000,
-                response_format: { type: 'json_object' },
             }), {
                 maxAttempts: 3,
                 retryableErrors: ['429', '503', '502', '504', 'ETIMEDOUT', 'ECONNRESET'],
             });
             const content = response.choices[0]?.message?.content;
+            // Log raw response for debugging
+            logger_1.logger.debug(`Raw LLM response for ${filePath}:`);
+            logger_1.logger.debug(content || '(empty response)');
             if (!content) {
                 logger_1.logger.warning(`Empty response from LLM for ${filePath}`);
                 return { reviews: [], summary: 'No review generated' };
