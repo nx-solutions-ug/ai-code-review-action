@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { ReviewResult } from '../types';
+import { ReviewResult, ReviewIssue } from '../types';
 import { logger } from '../utils/logger';
 import { withRetry } from '../utils/retry';
 
