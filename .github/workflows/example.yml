@@ -26,7 +26,7 @@ jobs:
 
       # Run AI Code Review
       - name: AI Code Review
-        uses: your-username/ai-code-review-action@v1
+        uses: nx-solutions-ug/open-review@v1
         with:
           # Required: LLM configuration
           LLM_BASE_URL: "https://api.openai.com/v1"

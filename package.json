@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nx-solutions-ug/ai-code-review-action.git"
+    "url": "git+https://github.com/nx-solutions-ug/open-review.git"
   },
   "keywords": [
     "github-action",

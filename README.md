@@ -239,8 +239,8 @@ The action includes robust error handling:
 
 ```bash
 # Clone the repository
-git clone https://github.com/nx-solutions-ug/ai-code-review-action.git
-cd ai-code-review-action
+git clone https://github.com/nx-solutions-ug/open-review.git
+cd open-review
 
 # Install dependencies
 npm install
@@ -341,9 +341,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- 📖 [Documentation](https://github.com/nx-solutions-ug/ai-code-review-action/wiki)
-- 🐛 [Issue Tracker](https://github.com/nx-solutions-ug/ai-code-review-action/issues)
-- 💬 [Discussions](https://github.com/nx-solutions-ug/ai-code-review-action/discussions)
+- 📖 [Documentation](https://github.com/nx-solutions-ug/open-review/wiki)
+- 🐛 [Issue Tracker](https://github.com/nx-solutions-ug/open-review/issues)
+- 💬 [Discussions](https://github.com/nx-solutions-ug/open-review/discussions)
 
 ---
 
